@@ -8,6 +8,6 @@
     "dev": "node server.mjs"
   },
   "devDependencies": {
-    "live-server": "1.2.2"
+    "live-server": "^1.2.2"
   }
 }

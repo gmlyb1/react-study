@@ -1,65 +1,126 @@
-// 실습 (Practice)
-import { createElement, isValidElement } from './lib/virtual/index.js'; // like React
-import { createRoot } from './lib/virtual-dom/index.js'; // like React DOM
+import { createElement as h } from 'https://esm.sh/react';
+import { createRoot } from 'https://esm.sh/react-dom';
 
-// Data (Declarative Programming)
+// HTML = Hyper Text Markup Language 마크업
+
+// JavaScript 마크업
+// 함수 이름이 h인 이유 : Hyper Script Markup Language
+// h()
+
 const listData = {
-  items: [
-    { id: '3', title: 'Graphics' },
-    { id: '1', title: 'Climatology' },
-    { id: '2', title: 'History of Architecture' },
-    { id: '4', title: 'Building design' },
-  ],
+  items: [],
 };
 
-// Data + JavaScript Markup = Virtual DOM (VirtualElement Tree)
-const listItems = listData.items.map(({ id, title }) => {
-  // 가상 요소 반환
-  const itemElement = createElement(
-    'li',
-    { className: 'item' },
-    createElement('img', {
-      src: `/architectures/architecture-${id}.jpg`,
-      alt: '',
-    }),
-    createElement('span', { className: 'content' }, title),
-    createElement(
-      'button',
-      {
-        type: 'button',
-        title: '아이템 이동 (위/아래 화살표 키 활용)',
-      },
-      createElement('img', {
-        src: '/icons/handle.svg',
-        alt: '아이템 이동 (위/아래 화살표 키 활용)',
-      })
-    )
-  );
-  return itemElement;
+const reactiveListData = new Proxy(listData, {
+  get(target, prop) {
+    console.log('[GET]');
+
+    return target[prop];
+  },
+
+  set(target, prop, newValue) {
+    const oldValue = target[prop];
+
+    target[prop] = newValue;
+
+    console.log('[SET] update', JSON.stringify(newValue));
+
+    console.log('리-렌더링(re-render)');
+    render();
+
+    return true;
+  },
 });
 
-// console.log(...listItems);
+const container = document.getElementById('root');
 
-// TODO: <ul class="architectures" lang="en"></ul> 가상 요소 생성
-// API : createElement(type, props, ...children)
-const list = createElement(
-  // type
-  'ul',
-  // props
-  { className: 'architectures', lang: 'en' },
-  // ...children (child1, child2, ..., childN)
-  // <li class="item"></li> 가상 요소 삽입(추가)
-  ...listItems
-);
+const reactDomRoot = createRoot(container);
 
-// 가상 요소 객체
-console.log(isValidElement(list));
+function render() {
+  const children = reactiveListData.items.map(({ id, title }) => {
+    const reactElement = h(
+      'li',
+      {
+        key: id,
+        className: 'item',
+      },
+      h('img', {
+        src: `/architectures/architecture-${id}.jpg`,
+        alt: '',
+      }),
+      h(
+        'span',
+        {
+          className: 'content',
+        },
+        title
+      ),
+      h(
+        'button',
+        {
+          type: 'button',
+          title: '아이템 이동 (위/아래 화살표 키 활용)',
+        },
+        h('img', {
+          src: '/icons/handle.svg',
+          alt: '아이템 이동 (위/아래 화살표 키 활용)',
+        })
+      )
+    );
 
-// 일반 JavaScript 객체
-console.log(isValidElement({ $$typeof: Symbol('virtual.element') }));
+    return reactElement;
+  });
 
-// 가상 DOM (실제 DOM 흉내: 단순화)
-// console.log(list);
-const root = createRoot(document.getElementById('virtual-dom'));
+  const list = h(
+    'ul',
+    { className: 'architectures', lang: 'en' },
 
-root.render(list);
+    children
+  );
+
+  reactDomRoot.render(list);
+}
+
+function unmount() {
+  reactDomRoot.unmount();
+}
+
+render();
+
+setTimeout(() => {
+  reactiveListData.items = [
+    ...reactiveListData.items,
+    {
+      id: 1,
+      title: 'Climatology',
+    },
+  ];
+}, 1000);
+setTimeout(() => {
+  reactiveListData.items = [
+    ...reactiveListData.items,
+    {
+      id: 2,
+      title: 'History of Architecture',
+    },
+  ];
+}, 2000);
+setTimeout(() => {
+  reactiveListData.items = [
+    ...reactiveListData.items,
+    {
+      id: 3,
+      title: 'Graphics',
+    },
+  ];
+}, 3000);
+
+setTimeout(() => {
+  reactiveListData.items = [
+    ...reactiveListData.items,
+    {
+      id: 4,
+      title: 'Building design',
+    },
+  ];
+}, 4000);
