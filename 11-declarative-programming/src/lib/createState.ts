@@ -4,6 +4,7 @@ interface State {
 
 type StateAction = (key: string, value: any) => void;
 
+// 선언된 상태 관리 미니 툴 API
 const createState = (
   data: State,
   callback: () => void
